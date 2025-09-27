@@ -1,4 +1,4 @@
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import { generateText } from 'ai';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { text } = await generateText({
-      model: openai('gpt-5'),
+      model: anthropic('claude-3-5-sonnet-20241022'),
       prompt: message,
     });
 

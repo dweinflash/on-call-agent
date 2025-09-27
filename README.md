@@ -1,4 +1,4 @@
-# TypeScript Next.js AI SDK 5 Starter
+# On-Call Agent
 
 Minimal starter for AI apps with Next.js 15, TypeScript, AI SDK 5, shadcn/ui, and AI Elements.
 
@@ -19,7 +19,7 @@ Minimal starter for AI apps with Next.js 15, TypeScript, AI SDK 5, shadcn/ui, an
 
 2. Create `.env.local` file:
    ```bash
-   echo "OPENAI_API_KEY=your_openai_api_key_here" > .env.local
+   echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" > .env.local
    ```
 
 3. Start development:
