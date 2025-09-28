@@ -80,7 +80,7 @@ export async function initializeIndex(): Promise<void> {
       console.log(`Creating Pinecone index: ${INDEX_NAME}`);
       await pc.createIndex({
         name: INDEX_NAME,
-        dimension: 384, // Matches our embedding dimension
+        dimension: 1536, // Matches OpenAI text-embedding-3-small dimension
         metric: 'cosine',
         spec: {
           serverless: {
@@ -246,6 +246,30 @@ export async function deleteDocumentsByFilename(filename: string): Promise<void>
     console.log(`Deleted documents with filename: ${filename}`);
   } catch (error) {
     console.error('Error deleting documents by filename from Pinecone:', error);
+    throw error;
+  }
+}
+
+export async function deleteIndex(): Promise<void> {
+  try {
+    const pc = getPinecone();
+
+    // Check if index exists first
+    const indexList = await pc.listIndexes();
+    const indexExists = indexList.indexes?.some(idx => idx.name === INDEX_NAME);
+
+    if (indexExists) {
+      console.log(`Deleting Pinecone index: ${INDEX_NAME}`);
+      await pc.deleteIndex(INDEX_NAME);
+      console.log('Index deleted successfully');
+
+      // Reset local references
+      index = null;
+    } else {
+      console.log('Index does not exist, nothing to delete');
+    }
+  } catch (error) {
+    console.error('Error deleting Pinecone index:', error);
     throw error;
   }
 }

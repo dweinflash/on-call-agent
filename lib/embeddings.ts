@@ -1,26 +1,30 @@
 /**
  * Embedding generation utilities for the RAG system.
- * Uses deterministic hash-based embeddings for consistent vector representations.
+ * Uses OpenAI embeddings for semantic understanding.
  * Provides document chunking and processing capabilities for KMA documents.
  */
 
+import { OpenAI } from 'openai';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    // Generate a deterministic hash-based embedding for consistent results
-    const hash = simpleHash(text);
-    const embedding = [];
+    // Use OpenAI's text-embedding-3-small for semantic embeddings
+    // This provides excellent semantic understanding without dependency issues
+    const response = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: text,
+    });
 
-    // Generate 384-dimensional embedding to match standard embedding models
-    for (let i = 0; i < 384; i++) {
-      const seed = hash + i;
-      embedding.push((Math.sin(seed) + 1) / 2); // Normalize to 0-1 range
-    }
-
-    console.log(`Generated embedding for: "${text.substring(0, 50)}..."`);
+    const embedding = response.data[0].embedding;
+    console.log(`Generated OpenAI embedding for: "${text.substring(0, 50)}..." (${embedding.length}D)`);
     return embedding;
   } catch (error) {
-    console.error('Error generating embedding:', error);
-    throw new Error('Failed to generate embedding');
+    console.error('Error generating OpenAI embedding:', error);
+    throw new Error('Failed to generate OpenAI embedding');
   }
 }
 
@@ -108,12 +112,3 @@ export function createDocumentChunks(
   return chunks;
 }
 
-function simpleHash(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-}

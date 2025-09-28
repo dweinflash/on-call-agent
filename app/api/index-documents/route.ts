@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processAllKMADocuments } from '@/lib/document-processor';
-import { initializeIndex, upsertDocuments, deleteAllDocuments } from '@/lib/vector-store';
+import { initializeIndex, upsertDocuments, deleteAllDocuments, deleteIndex } from '@/lib/vector-store';
 
 export async function POST(request: NextRequest) {
   try {
-    const { reindex = false } = await request.json();
+    const { reindex = false, forceRecreate = false } = await request.json();
 
     console.log('Starting document indexing process...');
 
-    // Initialize Pinecone index
+    // If forceRecreate is true, delete and recreate the entire index
+    if (forceRecreate) {
+      console.log('Force recreating index...');
+      await deleteIndex();
+    }
+
+    // Initialize Pinecone index (this will create with correct dimensions)
     await initializeIndex();
     console.log('Pinecone index initialized');
 
     // If reindex is true, delete all existing documents
-    if (reindex) {
+    if (reindex && !forceRecreate) {
       console.log('Deleting existing documents...');
       await deleteAllDocuments();
     }

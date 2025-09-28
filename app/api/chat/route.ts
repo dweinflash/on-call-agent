@@ -5,6 +5,10 @@ import { searchSimilar } from '@/lib/vector-store';
 import { formatDocumentForRAG } from '@/lib/document-processor';
 import { RAG_INSTRUCTIONS, SYSTEM_PROMPT } from './prompt';
 
+// Minimum similarity threshold for including sources
+// Scores below this indicate the query is not relevant to the knowledge base
+const SIMILARITY_THRESHOLD = 0.5;
+
 export async function POST(request: NextRequest) {
   try {
     const { message } = await request.json();
@@ -18,18 +22,28 @@ export async function POST(request: NextRequest) {
 
     try {
       // Search for relevant documents in the knowledge base
-      const searchResults = await searchSimilar(message, 1);
+      // Get multiple candidates for filtering
+      const searchResults = await searchSimilar(message, 2);
 
-      if (searchResults.length > 0) {
-        // Format the search results as context
-        context = formatDocumentForRAG(searchResults);
+      // Filter results by similarity threshold
+      const relevantResults = searchResults.filter(result =>
+        result.score >= SIMILARITY_THRESHOLD
+      );
+
+      if (relevantResults.length > 0) {
+        // Format the relevant search results as context
+        context = formatDocumentForRAG(relevantResults);
 
         // Extract source information for citations
-        sources = searchResults.map(result => ({
+        sources = relevantResults.map(result => ({
           filename: result.metadata.filename,
           title: result.metadata.title,
           section: result.metadata.section,
         }));
+
+        console.log(`Found ${relevantResults.length} relevant documents (scores: ${relevantResults.map(r => r.score.toFixed(3)).join(', ')})`);
+      } else if (searchResults.length > 0) {
+        console.log(`No relevant documents found - highest score: ${Math.max(...searchResults.map(r => r.score)).toFixed(3)} (threshold: ${SIMILARITY_THRESHOLD})`);
       }
     } catch (searchError) {
       console.warn('Failed to search knowledge base:', searchError);
