@@ -3,17 +3,7 @@ import { generateText } from 'ai';
 import { NextRequest, NextResponse } from 'next/server';
 import { searchSimilar } from '@/lib/vector-store';
 import { formatDocumentForRAG } from '@/lib/document-processor';
-
-const SYSTEM_PROMPT = `You are an on-call incident response assistant with access to a knowledge base of incident response procedures (KMAs - Knowledge Management Articles). Your role is to help engineers resolve system incidents by providing accurate, step-by-step guidance based on documented procedures.
-
-When responding to incident-related queries:
-1. Always search your knowledge base first for relevant incident response procedures
-2. Provide specific, actionable steps from the documented procedures
-3. Include relevant system information (severity levels, alert thresholds, etc.)
-4. Reference the source documents for verification
-5. If no relevant documentation is found, clearly state this and provide general guidance
-
-Be concise, accurate, and focus on getting incidents resolved quickly. Always prioritize safety and following established procedures.`;
+import { RAG_INSTRUCTIONS, SYSTEM_PROMPT } from './prompt';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Search for relevant documents in the knowledge base
-      const searchResults = await searchSimilar(message, 5);
+      const searchResults = await searchSimilar(message, 1);
 
       if (searchResults.length > 0) {
         // Format the search results as context
@@ -47,19 +37,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Construct the enhanced prompt with context
-    const enhancedPrompt = context
-      ? `${SYSTEM_PROMPT}
-
-${context}
-
-User Question: ${message}
-
-Please provide a helpful response based on the above documentation. If the documentation is relevant, reference it in your answer. If not relevant, provide general assistance but mention that no specific incident procedures were found.`
-      : `${SYSTEM_PROMPT}
-
-User Question: ${message}
-
-Note: No relevant incident response procedures were found in the knowledge base. Please provide general assistance.`;
+    const enhancedPrompt = context 
+      ? createPromptWithContext(context, message)
+      : createPromptWithoutContext(message);
 
     const { text } = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
@@ -77,4 +57,33 @@ Note: No relevant incident response procedures were found in the knowledge base.
       { status: 500 }
     );
   }
+}
+
+// Helper function to create prompt with context
+function createPromptWithContext(context: string, message: string): string {
+  const userQuestionPrefix = 'User Question:';
+  
+  return [
+    SYSTEM_PROMPT,
+    '',
+    context,
+    '',
+    `${userQuestionPrefix} ${message}`,
+    '',
+    RAG_INSTRUCTIONS
+  ].join('\n');
+}
+
+// Helper function to create prompt without context
+function createPromptWithoutContext(message: string): string {
+  const userQuestionPrefix = 'User Question:';
+  const instructions = 'Note: No relevant incident response procedures were found in the knowledge base. Please provide general assistance.';
+  
+  return [
+    SYSTEM_PROMPT,
+    '',
+    `${userQuestionPrefix} ${message}`,
+    '',
+    instructions
+  ].join('\n');
 }
