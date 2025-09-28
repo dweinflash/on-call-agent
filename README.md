@@ -1,11 +1,12 @@
 # On-Call Agent
 
-AI-powered incident response chatbot with RAG (Retrieval-Augmented Generation) for KMA documentation using Next.js 15, TypeScript, AI SDK 5, Pinecone, shadcn/ui, and AI Elements.
+AI-powered incident response chatbot with RAG (Retrieval-Augmented Generation) for KMA documentation using Next.js 15, TypeScript, AI SDK 5, Pinecone vector database, OpenAI embeddings, shadcn/ui, and AI Elements.
 
 ## Features
 
 - RAG-powered chat interface with Claude for incident response
-- Pinecone vector database for document storage and retrieval
+- Pinecone vector database for document storage and semantic search
+- OpenAI text-embedding-3-small for document embeddings
 - KMA (Knowledge Management Articles) integration
 - Source citations and document references
 - AI Elements components (Conversation, Message, PromptInput)
@@ -24,6 +25,7 @@ AI-powered incident response chatbot with RAG (Retrieval-Augmented Generation) f
    ```bash
    echo "ANTHROPIC_API_KEY=your_anthropic_api_key_here" > .env.local
    echo "PINECONE_API_KEY=your_pinecone_api_key_here" >> .env.local
+   echo "OPENAI_API_KEY=your_openai_api_key_here" >> .env.local
    ```
 
 3. Start development:

@@ -21,7 +21,7 @@ This is a TypeScript Next.js 15 starter template for AI-powered applications:
 - **AI SDK 5** with Anthropic Claude integration
 - **shadcn/ui** components (New York style, neutral base color)
 - **Tailwind CSS v4** for styling
-- **RAG System** with ChromaDB for local vector storage
+- **RAG System** with Pinecone vector database and OpenAI embeddings
 
 ### Key Directories
 - `app/` - Next.js App Router pages and API routes
@@ -30,21 +30,21 @@ This is a TypeScript Next.js 15 starter template for AI-powered applications:
 - `components/ui/` - shadcn/ui components and source citation components
 - `lib/` - Core utilities including embeddings, vector store, and document processing
 - `public/docs/kma/` - Knowledge Management Articles for incident response
-- `chroma_db/` - Local ChromaDB storage (auto-created, gitignored)
 
 ### AI Integration
 - Uses AI SDK 5's `generateText()` for non-streaming responses
 - Configured for Anthropic Claude (claude-3-5-sonnet-20241022)
 - **RAG System**: Searches KMA documents and provides context to AI responses
 - API route at `/api/chat` expects `{ message: string }` and returns `{ response: string, sources?: Source[] }`
-- Requires `ANTHROPIC_API_KEY` in `.env.local`
+- Requires `ANTHROPIC_API_KEY`, `PINECONE_API_KEY`, and `OPENAI_API_KEY` in `.env.local`
 
 ### RAG (Retrieval-Augmented Generation) System
-- **Local Vector Storage**: ChromaDB for document embeddings (no external API required)
-- **Embedding Model**: Transformers.js with all-MiniLM-L6-v2 (runs locally)
-- **Document Processing**: Smart chunking of KMA markdown files
+- **Vector Database**: Pinecone for scalable document embeddings and similarity search
+- **Embedding Model**: OpenAI text-embedding-3-small (1536 dimensions)
+- **Document Processing**: Smart chunking of KMA markdown files into searchable segments
 - **Semantic Search**: Finds relevant incident procedures based on user queries
 - **Source Citations**: Shows which documents were referenced in responses
+- **Similarity Threshold**: 0.5 minimum score for including sources in responses
 
 ### UI Components
 - **shadcn/ui** configured with:
@@ -67,6 +67,8 @@ This is a TypeScript Next.js 15 starter template for AI-powered applications:
 Create `.env.local` with:
 ```
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
+PINECONE_API_KEY=your_pinecone_api_key_here
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 ## RAG Setup
