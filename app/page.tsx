@@ -18,10 +18,15 @@ import {
   PromptInputToolbar,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
+import { SourceCitation, SourceSummary, type Source } from "@/components/ui/source-citation";
 import type { UIMessage } from "ai";
 
+interface ExtendedUIMessage extends UIMessage {
+  sources?: Source[];
+}
+
 export default function Home() {
-  const [messages, setMessages] = useState<UIMessage[]>([]);
+  const [messages, setMessages] = useState<ExtendedUIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (
@@ -30,7 +35,7 @@ export default function Home() {
   ) => {
     if (!message.text?.trim() || isLoading) return;
 
-    const userMessage: UIMessage = {
+    const userMessage: ExtendedUIMessage = {
       id: Date.now().toString(),
       role: "user",
       content: message.text,
@@ -48,10 +53,11 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        const assistantMessage: UIMessage = {
+        const assistantMessage: ExtendedUIMessage = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
           content: data.response,
+          sources: data.sources,
         };
         setMessages((prev) => [...prev, assistantMessage]);
       } else {
@@ -59,7 +65,7 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error:", error);
-      const errorMessage: UIMessage = {
+      const errorMessage: ExtendedUIMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content: "Sorry, I encountered an error. Please try again.",
@@ -76,21 +82,32 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-4xl mx-auto">
       <div className="border-b p-4">
-        <h1 className="text-xl font-semibold">AI Chat Assistant</h1>
+        <h1 className="text-xl font-semibold">On-Call Incident Response Assistant</h1>
+        <p className="text-sm text-gray-600 mt-1">
+          Ask about system incidents, alerts, or troubleshooting procedures
+        </p>
       </div>
 
       <Conversation className="flex-1">
         <ConversationContent className="space-y-4">
           {messages.length === 0 ? (
             <ConversationEmptyState
-              title="Start a conversation"
-              description="Ask me anything and I'll help you out!"
+              title="Ready to help with incidents"
+              description="Ask me about system alerts, troubleshooting steps, or incident response procedures!"
             />
           ) : (
             messages.map((message) => (
               <Message key={message.id} from={message.role}>
                 <MessageContent>
                   {message.content}
+                  {message.role === "assistant" && (
+                    <>
+                      <SourceSummary sourceCount={message.sources?.length || 0} />
+                      {message.sources && message.sources.length > 0 && (
+                        <SourceCitation sources={message.sources} />
+                      )}
+                    </>
+                  )}
                 </MessageContent>
               </Message>
             ))
@@ -108,7 +125,7 @@ export default function Home() {
       <div className="p-4">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputBody>
-            <PromptInputTextarea placeholder="What would you like to know?" />
+            <PromptInputTextarea placeholder="Describe the incident or ask about troubleshooting procedures..." />
             <PromptInputToolbar>
               <div />
               <PromptInputSubmit status={isLoading ? "submitted" : undefined} />
