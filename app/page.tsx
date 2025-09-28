@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Conversation,
   ConversationContent,
@@ -28,12 +28,18 @@ interface ExtendedUIMessage extends UIMessage {
 export default function Home() {
   const [messages, setMessages] = useState<ExtendedUIMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = async (
     message: { text?: string; files?: any[] },
     event: React.FormEvent
   ) => {
     if (!message.text?.trim() || isLoading) return;
+
+    // Clear the textarea input immediately
+    if (textareaRef.current) {
+      textareaRef.current.value = "";
+    }
 
     const userMessage: ExtendedUIMessage = {
       id: Date.now().toString(),
@@ -74,9 +80,6 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-
-    // Reset form
-    (event.target as HTMLFormElement).reset();
   };
 
   return (
@@ -125,7 +128,10 @@ export default function Home() {
       <div className="p-4">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputBody>
-            <PromptInputTextarea placeholder="Describe the incident or ask about troubleshooting procedures..." />
+            <PromptInputTextarea
+              ref={textareaRef}
+              placeholder="Describe the incident or ask about troubleshooting procedures..."
+            />
             <PromptInputToolbar>
               <div />
               <PromptInputSubmit status={isLoading ? "submitted" : undefined} />
